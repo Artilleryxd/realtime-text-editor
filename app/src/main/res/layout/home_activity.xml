@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -8,16 +9,32 @@
     <!-- Layout to display document images -->
     <LinearLayout
         android:id="@+id/documentsLayout"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginBottom="16dp"
-        android:scrollbars="horizontal" />
+        android:scrollbars="horizontal"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"/>
 
     <!-- Button to create a new document -->
     <Button
         android:id="@+id/btnCreateDocument"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/documentsLayout"
+        android:layout_centerInParent="true"
         android:text="Create Document" />
-</LinearLayout>
+
+    <ImageView
+        android:id="@+id/imgLogout"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_logout"
+        android:contentDescription="Logout"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginRight="16dp" />
+
+
+</RelativeLayout>

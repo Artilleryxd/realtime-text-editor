@@ -3,10 +3,12 @@ package com.example.realtimetextproject;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -19,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class HomeActivity extends AppCompatActivity {
 
     private Button btnCreateDocument;
+    private ImageView imgLogout; // Declare the logout ImageView
     private FirebaseFirestore firestore;
     private FirebaseAuth firebaseAuth;
     private LinearLayout documentsLayout;  // To hold clickable document images
@@ -40,6 +43,12 @@ public class HomeActivity extends AppCompatActivity {
 
         // Set up the create document button listener
         btnCreateDocument.setOnClickListener(v -> showCreateDocumentDialog());
+
+        // Initialize the logout ImageView and set its click listener
+        imgLogout = findViewById(R.id.imgLogout);
+
+        // Set up the logout image click listener
+        imgLogout.setOnClickListener(v -> logout());
 
         // Fetch and display all documents
         fetchDocuments();
@@ -76,12 +85,19 @@ public class HomeActivity extends AppCompatActivity {
                         // Clear previous documents (if any)
                         documentsLayout.removeAllViews();
 
-                        // Loop through all documents and create an image for each
+                        // Loop through all documents and create a layout for each
                         for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                             String documentId = documentSnapshot.getId();
                             String documentName = documentSnapshot.getString("name");  // Assume document has a 'name' field
 
-                            // Create an ImageView for each document
+                            // Create a LinearLayout for each document with an ImageView and TextView
+                            LinearLayout documentLayout = new LinearLayout(HomeActivity.this);
+                            documentLayout.setOrientation(LinearLayout.VERTICAL);
+                            documentLayout.setGravity(Gravity.CENTER);
+                            documentLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+                            // Create an ImageView for the document
                             ImageView documentImageView = new ImageView(HomeActivity.this);
                             // Set a placeholder image (e.g., an icon)
                             documentImageView.setImageResource(R.drawable.ic_launcher_background);
@@ -89,13 +105,25 @@ public class HomeActivity extends AppCompatActivity {
                             // Add a click listener to open the document editor
                             documentImageView.setOnClickListener(v -> openDocumentEditor(documentId));
 
-                            // Optionally set the image size and layout properties
-                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(200, 200);
-                            params.setMargins(8, 8, 8, 8);  // Add some margins between images
-                            documentImageView.setLayoutParams(params);
+                            // Set layout parameters for the image (increase size)
+                            LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(300, 300); // Increase size to 300x300
+                            imageParams.setMargins(16, 16, 16, 16);  // Increase margin for more space between images
+                            documentImageView.setLayoutParams(imageParams);
 
-                            // Add the image view to the layout
-                            documentsLayout.addView(documentImageView);
+                            // Create a TextView for the document name
+                            TextView documentNameTextView = new TextView(HomeActivity.this);
+                            documentNameTextView.setText(documentName);
+                            documentNameTextView.setGravity(Gravity.CENTER);
+                            documentNameTextView.setTextSize(18); // Optional: Increase font size of document name
+                            documentNameTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+                            // Add ImageView and TextView to the LinearLayout
+                            documentLayout.addView(documentImageView);
+                            documentLayout.addView(documentNameTextView);
+
+                            // Add the document layout to the parent layout
+                            documentsLayout.addView(documentLayout);
                         }
                     }
                 })
@@ -103,6 +131,7 @@ public class HomeActivity extends AppCompatActivity {
                     Toast.makeText(HomeActivity.this, "Failed to fetch documents: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
 
     // Create the document in Firestore with initial empty content
     private void createDocumentInFirestore(String documentName) {
@@ -135,5 +164,16 @@ public class HomeActivity extends AppCompatActivity {
         Intent intent = new Intent(HomeActivity.this, DocumentEditorActivity.class);
         intent.putExtra("documentId", documentId);  // Pass the document ID to the editor activity
         startActivity(intent);
+    }
+
+    // Handle logout functionality
+    private void logout() {
+        // Sign out the user
+        firebaseAuth.signOut();
+
+        // Redirect to the login screen
+        Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
+        startActivity(intent);
+        finish(); // Finish the current activity so that the user cannot navigate back to it
     }
 }

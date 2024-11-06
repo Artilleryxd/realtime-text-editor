@@ -1,9 +1,12 @@
 package com.example.realtimetextproject;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -11,6 +14,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class DocumentEditorActivity extends AppCompatActivity {
 
@@ -73,6 +79,14 @@ public class DocumentEditorActivity extends AppCompatActivity {
             // Listen for changes to the document content in real-time
             listenForDocumentChanges();
         }
+
+        // Save document button functionality
+        Button btnSaveDocument = findViewById(R.id.btnSaveDocument);
+        btnSaveDocument.setOnClickListener(v -> saveDocumentToFirestore());
+
+        // Save to file button functionality
+        Button btnSaveToFile = findViewById(R.id.btnSaveToFile);
+        btnSaveToFile.setOnClickListener(v -> saveDocumentToFile());
     }
 
     // Fetch document content from Firestore
@@ -122,6 +136,42 @@ public class DocumentEditorActivity extends AppCompatActivity {
                     // Handle error
                     Toast.makeText(DocumentEditorActivity.this, "Failed to update content: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    // Save document content to Firestore
+    private void saveDocumentToFirestore() {
+        String content = etDocumentContent.getText().toString();
+        if (!content.isEmpty()) {
+            updateDocumentContent(content);
+
+            // Show success toast
+            Toast.makeText(this, "Document saved successfully!", Toast.LENGTH_SHORT).show();
+
+            // Navigate back to the HomeActivity
+            Intent intent = new Intent(DocumentEditorActivity.this, HomeActivity.class);
+            startActivity(intent);
+            finish(); // Close the current activity
+        } else {
+            Toast.makeText(this, "Cannot save empty document", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Save document content to a local file
+    private void saveDocumentToFile() {
+        String content = etDocumentContent.getText().toString();
+        if (!content.isEmpty()) {
+            // Save to a file
+            try {
+                FileOutputStream fos = openFileOutput("document.txt", Context.MODE_PRIVATE);
+                fos.write(content.getBytes());
+                fos.close();
+                Toast.makeText(this, "Document saved to file!", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                Toast.makeText(this, "Failed to save document to file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(this, "Cannot save empty document", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
