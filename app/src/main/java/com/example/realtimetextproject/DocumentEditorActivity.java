@@ -1,6 +1,7 @@
 package com.example.realtimetextproject;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
@@ -18,6 +19,9 @@ public class DocumentEditorActivity extends AppCompatActivity {
     private FirebaseFirestore firestore;
     private DocumentReference documentRef;
 
+    private Handler handler;  // Declare Handler here
+    private Runnable updateContentRunnable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,6 +29,9 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
         firestore = FirebaseFirestore.getInstance();
         etDocumentContent = findViewById(R.id.etDocumentContent);
+
+        // Initialize the handler here to avoid the null pointer exception
+        handler = new Handler();
 
         // Get documentId from intent extras
         documentId = getIntent().getStringExtra("documentId");
@@ -42,8 +49,21 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
                 @Override
                 public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                    // Update the document content in Firestore in real-time
-                    updateDocumentContent(charSequence.toString());
+                    // Remove any previous scheduled update task
+                    if (handler != null) {
+                        handler.removeCallbacks(updateContentRunnable);
+                    }
+
+                    // Schedule the update of Firestore after a delay (debouncing)
+                    updateContentRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            updateDocumentContent(charSequence.toString());
+                        }
+                    };
+
+                    // Run the update after 500ms
+                    handler.postDelayed(updateContentRunnable, 500);
                 }
 
                 @Override
@@ -102,5 +122,14 @@ public class DocumentEditorActivity extends AppCompatActivity {
                     // Handle error
                     Toast.makeText(DocumentEditorActivity.this, "Failed to update content: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up handler
+        if (handler != null) {
+            handler.removeCallbacks(updateContentRunnable);
+        }
     }
 }
