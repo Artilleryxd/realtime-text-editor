@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:layout_centerVertical="true"
+    android:layout_centerHorizontal="true"> <!-- Center all content within parent -->
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <TextView
+            android:id="@+id/tv1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Please Sign In"
+            android:textSize="24sp"
+            android:layout_centerHorizontal="true"
+            />
+
+        <!-- Email EditText (Centered horizontally and width 300dp) -->
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:layout_below="@id/tv1"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Password EditText (Centered horizontally and width 300dp) -->
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:layout_below="@id/etEmail"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Sign In Button (Centered horizontally and width 300dp) -->
+        <Button
+            android:id="@+id/btnSignIn"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="Sign In"
+            android:layout_below="@id/etPassword"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Clickable Text for "Not Registered Yet?" (Centered horizontally) -->
+        <Button
+            android:id="@+id/btnSignUp"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="Sign Up"
+            android:layout_below="@id/btnSignIn"
+            android:layout_centerHorizontal="true"/>
+
+
+    </RelativeLayout>
+
+</RelativeLayout>

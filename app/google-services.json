@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "101218565107",
+    "project_id": "realtime-text-80f40",
+    "storage_bucket": "realtime-text-80f40.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:101218565107:android:7fc79fdcfa4674382eb086",
+        "android_client_info": {
+          "package_name": "com.example.realtimetextproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWIwrw1SrvTYBZH3Q0si7Mz8UuCWnoWa0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
