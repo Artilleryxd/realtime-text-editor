@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.*;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
