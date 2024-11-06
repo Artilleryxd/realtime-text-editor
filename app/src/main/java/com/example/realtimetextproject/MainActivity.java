@@ -2,62 +2,42 @@ package com.example.realtimetextproject;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
+import android.os.Handler;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
-
-    // Firebase Authentication instance
-    private FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize Firebase
-        FirebaseApp.initializeApp(this);
-        firebaseAuth = FirebaseAuth.getInstance();  // Initialize Firebase Auth
+        // Delay to show the splash screen for 2 seconds
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Check if the user is already logged in
+                FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+                FirebaseUser user = firebaseAuth.getCurrentUser();
 
-        // Check Firebase initialization status
-        if (FirebaseApp.getApps(this).isEmpty()) {
-            Log.d("Firebase", "Firebase not initialized");
-        } else {
-            Log.d("Firebase", "Firebase initialized successfully");
-        }
 
-        // Check if user is already signed in
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null) {
-            Log.d("Auth", "User is already logged in: " + currentUser.getEmail());
-            // If user is logged in, navigate to the TextEditorActivity
-            navigateToTextEditor();
-        } else {
-            Log.d("Auth", "No user is logged in. Redirecting to AuthActivity.");
-            // If not logged in, redirect to the login/register activity
-            navigateToAuth();
-        }
+                if (user != null) {
+                    // If user is logged in, send them to HomeActivity
+                    Intent homeIntent = new Intent(MainActivity.this, HomeActivity.class);
+                    startActivity(homeIntent);
+                } else {
+                    // If user is not logged in, send them to RegisterActivity
+                    Intent registerIntent = new Intent(MainActivity.this, RegisterActivity.class);
+                    startActivity(registerIntent);
+                }
 
-        // Example button to navigate manually to text editor (in case you want a button on this screen)
-        Button editorButton = findViewById(R.id.button_open_editor);
-        editorButton.setOnClickListener(v -> navigateToTextEditor());
-    }
-
-    private void navigateToTextEditor() {
-        Intent editorIntent = new Intent(MainActivity.this, TextEditorActivity.class);
-        startActivity(editorIntent);
-        finish();
-    }
-
-    // Navigate to the Authentication Activity (for login/register)
-    private void navigateToAuth() {
-        Intent authIntent = new Intent(MainActivity.this, AuthActivity.class);
-        startActivity(authIntent);
-        finish(); // Close MainActivity after navigation
+                // Close MainActivity so the user can't return to it
+                finish();
+            }
+        }, 2000); // 2000ms = 2 seconds
     }
 }

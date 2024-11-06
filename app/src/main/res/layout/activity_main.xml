@@ -2,18 +2,14 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="16dp">
+    android:background="@drawable/splash_screen">
 
-    <!-- This is the button that opens the TextEditorActivity -->
-    <Button
-        android:id="@+id/button_open_editor"
+    <!-- Show your app logo or icon -->
+    <ImageView
+        android:id="@+id/splash_logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:text="Open Text Editor" />
-
+        android:src="@drawable/app_icon"
+        android:layout_centerInParent="true" />
 
 </RelativeLayout>
