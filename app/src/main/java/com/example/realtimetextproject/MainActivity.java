@@ -17,27 +17,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Delay to show the splash screen for 2 seconds
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // Check if the user is already logged in
-                FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-                FirebaseUser user = firebaseAuth.getCurrentUser();
+        new Handler().postDelayed(() -> {
+            // Check if the user is already logged in
+            FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+            FirebaseUser user = firebaseAuth.getCurrentUser();
 
+            firebaseAuth.signOut();
 
-                if (user != null) {
-                    // If user is logged in, send them to HomeActivity
-                    Intent homeIntent = new Intent(MainActivity.this, HomeActivity.class);
-                    startActivity(homeIntent);
-                } else {
-                    // If user is not logged in, send them to RegisterActivity
-                    Intent registerIntent = new Intent(MainActivity.this, RegisterActivity.class);
-                    startActivity(registerIntent);
-                }
-
-                // Close MainActivity so the user can't return to it
-                finish();
+            if (user != null) {
+                // If user is logged in, send them to HomeActivity
+                Intent homeIntent = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(homeIntent);
+            } else {
+                // If user is not logged in, send them to RegisterActivity
+                Intent registerIntent = new Intent(MainActivity.this, RegisterActivity.class);
+                startActivity(registerIntent);
             }
+
+            // Close MainActivity so the user can't return to it
+            finish();
         }, 2000); // 2000ms = 2 seconds
     }
 }
