@@ -1,0 +1,15 @@
+<!-- activity_document_editor.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <EditText
+        android:id="@+id/etDocumentContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:hint="Start typing your document content here"
+        android:gravity="top|start"
+        android:padding="16dp"
+        android:textSize="18sp" />
+
+</ScrollView>

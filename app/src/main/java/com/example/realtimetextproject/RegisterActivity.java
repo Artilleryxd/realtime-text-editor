@@ -11,14 +11,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.*;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
 
     // UI components
     private EditText etName, etEmail, etPassword;
-    private Button btnRegister;
+    private Button btnRegister, btnRedirectToLogin;
 
     // Firebase instances
     private FirebaseAuth firebaseAuth;
@@ -38,9 +37,17 @@ public class RegisterActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnRegister = findViewById(R.id.btnRegister);
+        btnRedirectToLogin = findViewById(R.id.btnRedirectToLogin);
 
         // Register Button Listener
         btnRegister.setOnClickListener(v -> registerUser());
+
+        // Redirect to LoginActivity Button Listener
+        btnRedirectToLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();  // Finish RegisterActivity so the user can't go back to it
+        });
     }
 
     // Method to register the user
