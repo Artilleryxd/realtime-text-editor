@@ -1,13 +1,16 @@
 package com.example.realtimetextproject;
 
-import android.content.Context;
-import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,81 +24,140 @@ import java.io.IOException;
 public class DocumentEditorActivity extends AppCompatActivity {
 
     private EditText etDocumentContent;
+    private TextView tvLivePreview;  // TextView for live preview
     private String documentId;
     private FirebaseFirestore firestore;
     private DocumentReference documentRef;
-
-    private Handler handler;  // Declare Handler here
+    private Handler handler;
     private Runnable updateContentRunnable;
+
+    private boolean isBold = false;
+    private boolean isItalic = false;
+    private int textColor = Color.BLACK;  // Default text color
+    private int textSize = 16;  // Default text size
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_document_editor);
 
         firestore = FirebaseFirestore.getInstance();
         etDocumentContent = findViewById(R.id.etDocumentContent);
+        tvLivePreview = findViewById(R.id.tvLivePreview);  // Initialize TextView
 
-        // Initialize the handler here to avoid the null pointer exception
         handler = new Handler();
-
-        // Get documentId from intent extras
         documentId = getIntent().getStringExtra("documentId");
 
         if (documentId != null) {
             documentRef = firestore.collection("documents").document(documentId);
-
-            // Fetch initial document content
             fetchDocumentContent();
-
-            // Add real-time listener to update Firestore when content changes
-            etDocumentContent.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {}
-
-                @Override
-                public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                    // Remove any previous scheduled update task
-                    if (handler != null) {
-                        handler.removeCallbacks(updateContentRunnable);
-                    }
-
-                    // Schedule the update of Firestore after a delay (debouncing)
-                    updateContentRunnable = new Runnable() {
-                        @Override
-                        public void run() {
-                            updateDocumentContent(charSequence.toString());
-                        }
-                    };
-
-                    // Run the update after 500ms
-                    handler.postDelayed(updateContentRunnable, 500);
-                }
-
-                @Override
-                public void afterTextChanged(Editable editable) {}
-            });
-
-            // Listen for changes to the document content in real-time
+            setupTextWatcher();
             listenForDocumentChanges();
         }
 
-        // Save document button functionality
-        Button btnSaveDocument = findViewById(R.id.btnSaveDocument);
-        btnSaveDocument.setOnClickListener(v -> saveDocumentToFirestore());
-
-        // Save to file button functionality
         Button btnSaveToFile = findViewById(R.id.btnSaveToFile);
-        btnSaveToFile.setOnClickListener(v -> saveDocumentToFile());
+        Button btnSaveAndReturn = findViewById(R.id.btnSaveAndReturn);
+
+        btnSaveToFile.setOnClickListener(v -> saveTextToFile());
+
+        btnSaveAndReturn.setOnClickListener(v -> {
+            saveDocumentAndReturn();
+        });
+
+        Button btnBold = findViewById(R.id.btnBold);
+        Button btnItalic = findViewById(R.id.btnItalic);
+        Button btnTextColor = findViewById(R.id.btnTextColor);
+        Spinner spinnerTextSize = findViewById(R.id.spinnerTextSize);
+
+        // Set up text size spinner
+        setupTextSizeSpinner(spinnerTextSize);
+
+        btnBold.setOnClickListener(v -> toggleBoldText());
+        btnItalic.setOnClickListener(v -> toggleItalicText());
+        btnTextColor.setOnClickListener(v -> changeTextColor());
     }
 
-    // Fetch document content from Firestore
+    private void setupTextWatcher() {
+        etDocumentContent.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (handler != null) {
+                    handler.removeCallbacks(updateContentRunnable);
+                }
+                updateContentRunnable = () -> updateDocumentContent(s.toString());
+                handler.postDelayed(updateContentRunnable, 500);
+
+                // Update TextView with live content from EditText
+                tvLivePreview.setText(s.toString());
+                updateTextViewStyle();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    private void updateTextViewStyle() {
+        tvLivePreview.setTypeface(null, (isBold ? Typeface.BOLD : Typeface.NORMAL) | (isItalic ? Typeface.ITALIC : Typeface.NORMAL));
+        tvLivePreview.setTextColor(textColor);
+        tvLivePreview.setTextSize(textSize);
+    }
+
+    private void toggleBoldText() {
+        isBold = !isBold;
+        updateTextViewStyle();
+    }
+
+    private void toggleItalicText() {
+        isItalic = !isItalic;
+        updateTextViewStyle();
+    }
+
+    private void changeTextColor() {
+        // Cycle through a few colors for demo purposes
+        if (textColor == Color.BLACK) {
+            textColor = Color.RED;
+        } else if (textColor == Color.RED) {
+            textColor = Color.BLUE;
+        } else {
+            textColor = Color.BLACK;
+        }
+        updateTextViewStyle();
+    }
+
+    private void setupTextSizeSpinner(Spinner spinner) {
+        Integer[] textSizeOptions = {12, 14, 16, 18, 20, 24, 30};
+        ArrayAdapter<Integer> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, textSizeOptions);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+
+        spinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, android.view.View view, int position, long id) {
+                textSize = textSizeOptions[position];
+                updateTextViewStyle();
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+        });
+    }
+
     private void fetchDocumentContent() {
         documentRef.get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
                 Document document = documentSnapshot.toObject(Document.class);
                 if (document != null) {
                     etDocumentContent.setText(document.getContent());
+                    tvLivePreview.setText(document.getContent());  // Set initial content to TextView
+                    updateTextViewStyle();  // Apply initial style
                 }
             } else {
                 Toast.makeText(this, "Document not found", Toast.LENGTH_SHORT).show();
@@ -105,7 +167,14 @@ public class DocumentEditorActivity extends AppCompatActivity {
         });
     }
 
-    // Real-time listener for changes in the document
+    private void updateDocumentContent(String content) {
+        documentRef.update("content", content)
+                .addOnSuccessListener(aVoid -> {})
+                .addOnFailureListener(e -> {
+                    Toast.makeText(DocumentEditorActivity.this, "Failed to update content: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
     private void listenForDocumentChanges() {
         documentRef.addSnapshotListener((documentSnapshot, e) -> {
             if (e != null) {
@@ -116,70 +185,38 @@ public class DocumentEditorActivity extends AppCompatActivity {
             if (documentSnapshot != null && documentSnapshot.exists()) {
                 Document document = documentSnapshot.toObject(Document.class);
                 if (document != null) {
-                    // Update the EditText only if the content in Firestore changes
                     String currentContent = etDocumentContent.getText().toString();
                     if (!currentContent.equals(document.getContent())) {
                         etDocumentContent.setText(document.getContent());
+                        tvLivePreview.setText(document.getContent());  // Update live preview
                     }
                 }
             }
         });
     }
-
-    // Update the document content in Firestore
-    private void updateDocumentContent(String content) {
-        documentRef.update("content", content)
-                .addOnSuccessListener(aVoid -> {
-                    // Content successfully updated in Firestore
-                })
-                .addOnFailureListener(e -> {
-                    // Handle error
-                    Toast.makeText(DocumentEditorActivity.this, "Failed to update content: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-    }
-
-    // Save document content to Firestore
-    private void saveDocumentToFirestore() {
+    private void saveDocumentAndReturn() {
         String content = etDocumentContent.getText().toString();
-        if (!content.isEmpty()) {
-            updateDocumentContent(content);
-
-            // Show success toast
-            Toast.makeText(this, "Document saved successfully!", Toast.LENGTH_SHORT).show();
-
-            // Navigate back to the HomeActivity
-            Intent intent = new Intent(DocumentEditorActivity.this, HomeActivity.class);
-            startActivity(intent);
-            finish(); // Close the current activity
-        } else {
-            Toast.makeText(this, "Cannot save empty document", Toast.LENGTH_SHORT).show();
+        if (documentRef != null) {
+            documentRef.update("content", content)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Document saved", Toast.LENGTH_SHORT).show();
+                        // Navigate back to HomeActivity
+                        finish();  // Ends current activity and returns to previous (HomeActivity)
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Failed to save document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
         }
     }
-
-    // Save document content to a local file
-    private void saveDocumentToFile() {
+    private void saveTextToFile() {
         String content = etDocumentContent.getText().toString();
-        if (!content.isEmpty()) {
-            // Save to a file
-            try {
-                FileOutputStream fos = openFileOutput("document.txt", Context.MODE_PRIVATE);
-                fos.write(content.getBytes());
-                fos.close();
-                Toast.makeText(this, "Document saved to file!", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                Toast.makeText(this, "Failed to save document to file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            Toast.makeText(this, "Cannot save empty document", Toast.LENGTH_SHORT).show();
-        }
-    }
+        String filename = "document_" + documentId + ".txt"; // Generate file name based on document ID
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Clean up handler
-        if (handler != null) {
-            handler.removeCallbacks(updateContentRunnable);
+        try (FileOutputStream fos = openFileOutput(filename, MODE_PRIVATE)) {
+            fos.write(content.getBytes());
+            Toast.makeText(this, "File saved: " + filename, Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Toast.makeText(this, "Failed to save file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-    }
 }
+};
