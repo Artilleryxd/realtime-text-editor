@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
             FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
             FirebaseUser user = firebaseAuth.getCurrentUser();
 
-            firebaseAuth.signOut();
 
             if (user != null) {
                 // If user is logged in, send them to HomeActivity

@@ -8,8 +8,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class DocumentEditorActivity extends AppCompatActivity {
 
@@ -24,24 +24,16 @@ public class DocumentEditorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_document_editor);
 
         firestore = FirebaseFirestore.getInstance();
-
         etDocumentContent = findViewById(R.id.etDocumentContent);
+
+        // Get documentId from intent extras
         documentId = getIntent().getStringExtra("documentId");
 
         if (documentId != null) {
             documentRef = firestore.collection("documents").document(documentId);
 
-            // Fetch and display document content
-            documentRef.get().addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    Document document = documentSnapshot.toObject(Document.class);
-                    if (document != null) {
-                        etDocumentContent.setText(document.getContent());
-                    }
-                } else {
-                    Toast.makeText(this, "Document not found", Toast.LENGTH_SHORT).show();
-                }
-            });
+            // Fetch initial document content
+            fetchDocumentContent();
 
             // Add real-time listener to update Firestore when content changes
             etDocumentContent.addTextChangedListener(new TextWatcher() {
@@ -57,7 +49,47 @@ public class DocumentEditorActivity extends AppCompatActivity {
                 @Override
                 public void afterTextChanged(Editable editable) {}
             });
+
+            // Listen for changes to the document content in real-time
+            listenForDocumentChanges();
         }
+    }
+
+    // Fetch document content from Firestore
+    private void fetchDocumentContent() {
+        documentRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                Document document = documentSnapshot.toObject(Document.class);
+                if (document != null) {
+                    etDocumentContent.setText(document.getContent());
+                }
+            } else {
+                Toast.makeText(this, "Document not found", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(e -> {
+            Toast.makeText(this, "Failed to fetch document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    // Real-time listener for changes in the document
+    private void listenForDocumentChanges() {
+        documentRef.addSnapshotListener((documentSnapshot, e) -> {
+            if (e != null) {
+                Toast.makeText(DocumentEditorActivity.this, "Error fetching document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (documentSnapshot != null && documentSnapshot.exists()) {
+                Document document = documentSnapshot.toObject(Document.class);
+                if (document != null) {
+                    // Update the EditText only if the content in Firestore changes
+                    String currentContent = etDocumentContent.getText().toString();
+                    if (!currentContent.equals(document.getContent())) {
+                        etDocumentContent.setText(document.getContent());
+                    }
+                }
+            }
+        });
     }
 
     // Update the document content in Firestore

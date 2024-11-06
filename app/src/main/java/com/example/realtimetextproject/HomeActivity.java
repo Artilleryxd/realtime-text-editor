@@ -5,11 +5,15 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class HomeActivity extends AppCompatActivity {
@@ -17,6 +21,7 @@ public class HomeActivity extends AppCompatActivity {
     private Button btnCreateDocument;
     private FirebaseFirestore firestore;
     private FirebaseAuth firebaseAuth;
+    private LinearLayout documentsLayout;  // To hold clickable document images
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,10 +32,17 @@ public class HomeActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
 
+        // Initialize the layout to display document images
+        documentsLayout = findViewById(R.id.documentsLayout);
+
+        // Button to create a new document
         btnCreateDocument = findViewById(R.id.btnCreateDocument);
 
         // Set up the create document button listener
         btnCreateDocument.setOnClickListener(v -> showCreateDocumentDialog());
+
+        // Fetch and display all documents
+        fetchDocuments();
     }
 
     // Show dialog to create a new document
@@ -53,6 +65,43 @@ public class HomeActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    // Fetch all documents from Firestore and display them as clickable images
+    private void fetchDocuments() {
+        firestore.collection("documents")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots != null) {
+                        // Clear previous documents (if any)
+                        documentsLayout.removeAllViews();
+
+                        // Loop through all documents and create an image for each
+                        for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                            String documentId = documentSnapshot.getId();
+                            String documentName = documentSnapshot.getString("name");  // Assume document has a 'name' field
+
+                            // Create an ImageView for each document
+                            ImageView documentImageView = new ImageView(HomeActivity.this);
+                            // Set a placeholder image (e.g., an icon)
+                            documentImageView.setImageResource(R.drawable.ic_launcher_background);
+
+                            // Add a click listener to open the document editor
+                            documentImageView.setOnClickListener(v -> openDocumentEditor(documentId));
+
+                            // Optionally set the image size and layout properties
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(200, 200);
+                            params.setMargins(8, 8, 8, 8);  // Add some margins between images
+                            documentImageView.setLayoutParams(params);
+
+                            // Add the image view to the layout
+                            documentsLayout.addView(documentImageView);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(HomeActivity.this, "Failed to fetch documents: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     // Create the document in Firestore with initial empty content

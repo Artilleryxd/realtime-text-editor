@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Create Document Button -->
+    <!-- Layout to display document images -->
+    <LinearLayout
+        android:id="@+id/documentsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:scrollbars="horizontal" />
+
+    <!-- Button to create a new document -->
     <Button
         android:id="@+id/btnCreateDocument"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Create Document"
-        android:layout_centerInParent="true"/>
-
-</RelativeLayout>
+        android:text="Create Document" />
+</LinearLayout>
